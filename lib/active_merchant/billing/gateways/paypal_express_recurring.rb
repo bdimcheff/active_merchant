@@ -46,12 +46,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_profile(token, options = {})
-        requires!(options, :description, :start_date, :frequency, :amount)
-        request = build_create_profile_request(token, options) do |xml|
-          add_credit_card(xml, options[:credit_card], options[:billing_address], options) if options[:credit_card]
-        end
-        
-        commit 'CreateRecurringPaymentsProfile', request
+        requires!(options, :description, :start_date, :frequency, :amount)        
+        commit 'CreateRecurringPaymentsProfile', build_create_profile_request(token, options)
       end
 
       def get_profile_details(profile_id)
@@ -151,7 +147,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:CreateRecurringPaymentsProfileRequestDetails' do
               xml.tag! 'Token', token unless token.blank?
-              yield xml
+              add_credit_card(xml, options[:credit_card], options[:billing_address], options) if options[:credit_card]
               xml.tag! 'n2:RecurringPaymentsProfileDetails' do
                 xml.tag! 'n2:BillingStartDate', (options[:start_date].is_a?(Date) ? options[:start_date].to_time : options[:start_date]).utc.iso8601
                 xml.tag! 'n2:ProfileReference', options[:reference] unless options[:reference].blank?
