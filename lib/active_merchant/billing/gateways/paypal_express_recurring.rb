@@ -47,8 +47,11 @@ module ActiveMerchant #:nodoc:
 
       def create_profile(token, options = {})
         requires!(options, :description, :start_date, :frequency, :amount)
-
-        commit 'CreateRecurringPaymentsProfile', build_create_profile_request(token, options)
+        request = build_create_profile_request(token, options) do |xml|
+          add_credit_card(xml, options[:credit_card], options[:billing_address], options) if options[:credit_card]
+        end
+        
+        commit 'CreateRecurringPaymentsProfile', request
       end
 
       def get_profile_details(profile_id)
@@ -148,19 +151,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:CreateRecurringPaymentsProfileRequestDetails' do
               xml.tag! 'Token', token unless token.blank?
-              if options[:credit_card]
-                xml.tag! 'n2:CreditCard' do
-                  xml.tag! 'n2:CreditCardType', options[:credit_card][:type]
-                  xml.tag! 'n2:CreditCardNumber', options[:credit_card][:number]
-                  xml.tag! 'n2:ExpMonth', options[:credit_card][:exp_month]
-                  xml.tag! 'n2:ExpYear', options[:credit_card][:exp_year]
-                  xml.tag! 'n2:CVV2', options[:credit_card][:cvv2] unless options[:credit_card][:cvv2].blank?
-                  xml.tag! 'n2:CardOwner', options[:credit_card][:card_owner]
-                  xml.tag! 'n2:StartMonth', options[:credit_card][:start_month] unless options[:credit_card][:start_month].blank?
-                  xml.tag! 'n2:StartYear', options[:credit_card][:start_year] unless options[:credit_card][:start_year].blank?
-                  xml.tag! 'n2:IssueNumber', options[:credit_card][:issue_number] unless options[:credit_card][:issue_number].blank?
-                end
-              end
+              yield xml
               xml.tag! 'n2:RecurringPaymentsProfileDetails' do
                 xml.tag! 'n2:BillingStartDate', (options[:start_date].is_a?(Date) ? options[:start_date].to_time : options[:start_date]).utc.iso8601
                 xml.tag! 'n2:ProfileReference', options[:reference] unless options[:reference].blank?
