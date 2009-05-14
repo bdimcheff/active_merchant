@@ -4,7 +4,7 @@ require File.dirname(__FILE__) + '/paypal_express_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalExpressRecurringGateway < Gateway
+    class PaypalExpressRecurringGateway < PaypalGateway
       include PaypalCommonAPI
       include PaypalExpressCommon
 
